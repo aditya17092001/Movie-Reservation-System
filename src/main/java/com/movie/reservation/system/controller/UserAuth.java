@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.movie.reservation.system.constants.RestURLs;
 import com.movie.reservation.system.dto.ResetPasswordRequestDTO;
+import com.movie.reservation.system.dto.UserSignInDTO;
+import com.movie.reservation.system.dto.UserSignUpDTO;
 import com.movie.reservation.system.model.Users;
 import com.movie.reservation.system.repository.UserRepo;
 
@@ -30,7 +32,7 @@ public class UserAuth {
     private BCryptPasswordEncoder passwordEncoder;
 
     @PostMapping(RestURLs.SIGNUP)
-    public ResponseEntity<?> userSignup(@RequestBody Users user) {
+    public ResponseEntity<?> userSignup(@RequestBody UserSignUpDTO user) {
         HashMap<String, String> response = new HashMap<>();
         if(user.getEmail() == null || user.getEmail().isEmpty() || user.getPassword() == null || user.getPassword().isEmpty()) {
             response.put("message", "Email and Password can't be empty.");
@@ -54,8 +56,13 @@ public class UserAuth {
         String password = user.getPassword();
         String encryptedPassword = passwordEncoder.encode(password);
 
-        user.setPassword(encryptedPassword);
-        repository.save(user);
+        Users newUser = new Users();
+        newUser.setEmail(user.getEmail());
+        newUser.setPassword(encryptedPassword);
+        newUser.setPhoneNo(user.getPhoneNo());
+        newUser.setName(user.getName());
+        newUser.setGender(user.getGender());
+        repository.save(newUser);
 
         log.info("User registered successfully");
         response.put("message", "User registered successfully.");
@@ -66,7 +73,7 @@ public class UserAuth {
 
 
     @PostMapping(RestURLs.SIGNIN)
-    public ResponseEntity<?> userSignin(@RequestBody Users user) {
+    public ResponseEntity<?> userSignin(@RequestBody UserSignInDTO user) {
         HashMap<String, String> response = new HashMap<>();
         if(user.getEmail() == null || user.getEmail().isEmpty() || user.getPassword() == null || user.getPassword().isEmpty()) {
             log.info("Email and Password can't be empty");
