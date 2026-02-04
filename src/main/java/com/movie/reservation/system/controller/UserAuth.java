@@ -9,10 +9,13 @@ import com.movie.reservation.system.dto.UserSignInDTO;
 import com.movie.reservation.system.dto.UserSignUpDTO;
 import com.movie.reservation.system.model.Users;
 import com.movie.reservation.system.repository.UserRepo;
+import com.movie.reservation.system.service.JwtService;
+import com.movie.reservation.system.service.UserService;
 
 import java.util.HashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.security.autoconfigure.SecurityProperties.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -31,72 +34,65 @@ public class UserAuth {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
+    @Autowired
+    private UserService userService;
+    
+    @Autowired
+    private JwtService jwtService;
+
     @PostMapping(RestURLs.SIGNUP)
     public ResponseEntity<?> userSignup(@RequestBody UserSignUpDTO user) {
         HashMap<String, String> response = new HashMap<>();
+    
         if(user.getEmail() == null || user.getEmail().isEmpty() || user.getPassword() == null || user.getPassword().isEmpty()) {
             response.put("message", "Email and Password can't be empty.");
             log.info("Email and Password can't be empty");
-            return ResponseEntity
-            .status(HttpStatus.BAD_REQUEST)
-                .body(response);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
-        Users user_existing = repository.findByEmail(user.getEmail());
-
-        if(user_existing != null) {
+        if(repository.findByEmail(user.getEmail()) != null) {
             log.info("User already exist");
             response.put("message", "User already exist, Please signin.");
-
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body(response);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
         }
-
-        String password = user.getPassword();
-        String encryptedPassword = passwordEncoder.encode(password);
 
         Users newUser = new Users();
         newUser.setEmail(user.getEmail());
-        newUser.setPassword(encryptedPassword);
+        newUser.setPassword(passwordEncoder.encode(user.getPassword()));
         newUser.setPhoneNo(user.getPhoneNo());
         newUser.setName(user.getName());
         newUser.setGender(user.getGender());
         repository.save(newUser);
 
+        String jwt = jwtService.generateToken(newUser.getUser_id());
+
         log.info("User registered successfully");
         response.put("message", "User registered successfully.");
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
+        response.put("token", jwt);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
 
     @PostMapping(RestURLs.SIGNIN)
     public ResponseEntity<?> userSignin(@RequestBody UserSignInDTO user) {
         HashMap<String, String> response = new HashMap<>();
+    
         if(user.getEmail() == null || user.getEmail().isEmpty() || user.getPassword() == null || user.getPassword().isEmpty()) {
             log.info("Email and Password can't be empty");
             response.put("message", "Email and Password can't be empty.");
-            return ResponseEntity
-            .status(HttpStatus.UNAUTHORIZED)
-            .body(response);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
-        Users existing_user = repository.findByEmail(user.getEmail());
-        
-        if(existing_user != null && passwordEncoder.matches(user.getPassword(), existing_user.getPassword())) {
+        try {
+            String jwt = userService.verify(user);
             log.info("Signin successful.");
             response.put("message", "Signin successful.");
-            return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(response);
-        } else {
+            response.put("token", jwt);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
             log.info("Invalid Credentials.");
             response.put("message", "Invalid Credentials.");
-            return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(response);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
     }
 
