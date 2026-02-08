@@ -1,5 +1,7 @@
 package com.movie.reservation.system.security;
 
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -24,8 +26,17 @@ public class MyUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Users user = userRepository.findByEmail(email);
         if(user == null) {
-            log.info("user not found with email: " + email);
+            log.info("User not found with email: " + email);
             throw new UsernameNotFoundException("User not found with email: " + email);
+        }
+        return new UserPrincipal(user);
+    }
+    
+    public UserDetails loadUserByUserId(UUID userId) throws UsernameNotFoundException {
+        Users user = userRepository.findByUser_id(userId);
+        if(user == null) {
+            log.info("User not found with ID: " + userId);
+            throw new UsernameNotFoundException("User not found with ID: " + userId);
         }
         return new UserPrincipal(user);
     }

@@ -12,6 +12,8 @@ public class RestURLs {
     public static final String SIGNOUT = "/signout";
     public static final String RESET_PASSWORD = "/reset-password";
     public static final String FORGET_PASSWORD = "/forget-password";
+    public static final String VERIFY_OTP = "/verify-otp";
+    public static final String SEND_OTP = "/send-otp";
     
     public static final String THEATERS = "/theaters";
     
