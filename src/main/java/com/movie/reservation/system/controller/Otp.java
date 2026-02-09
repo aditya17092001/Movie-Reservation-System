@@ -87,7 +87,7 @@ public class Otp {
 
     public HashMap<String, String> sendOTP(Email email) {   
         saveOtpEntry(email);
-        
+
         log.info("Email sending initiated!");
         HashMap<String, String> response = emailService.sendOtp(email);
 
