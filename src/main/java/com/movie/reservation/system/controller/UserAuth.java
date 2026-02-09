@@ -10,11 +10,9 @@ import com.movie.reservation.system.dto.UserSignUpDTO;
 import com.movie.reservation.system.model.Email;
 import com.movie.reservation.system.model.Role;
 import com.movie.reservation.system.model.Users;
-import com.movie.reservation.system.model.VerifyOtp;
 import com.movie.reservation.system.model.type.RoleType;
 import com.movie.reservation.system.repository.RoleRepo;
 import com.movie.reservation.system.repository.UserRepo;
-import com.movie.reservation.system.repository.VerifyOtpRepo;
 import com.movie.reservation.system.service.JwtService;
 import com.movie.reservation.system.service.UserService;
 import com.movie.reservation.system.util.GenerateOTP;
@@ -25,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import lombok.extern.slf4j.Slf4j;
@@ -53,10 +50,6 @@ public class UserAuth {
     @Autowired
     private Otp sendOTP;
 
-    @Autowired
-    private VerifyOtpRepo otpRepo;
-
-    @Transactional
     @PostMapping(RestURLs.SIGNUP)
     public ResponseEntity<?> userSignup(@RequestBody UserSignUpDTO user) {
         HashMap<String, String> response = new HashMap<>();
@@ -135,7 +128,6 @@ public class UserAuth {
         }
     }
 
-    @Transactional
     @PostMapping(RestURLs.RESET_PASSWORD)
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequestDTO resetPasswordRequestDTO) {
         Users user = repository.findByEmail(resetPasswordRequestDTO.getEmail());

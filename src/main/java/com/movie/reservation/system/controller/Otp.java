@@ -85,13 +85,22 @@ public class Otp {
             .body(response);
     } 
 
-    @Transactional
     public HashMap<String, String> sendOTP(Email email) {   
+        saveOtpEntry(email);
+
+        log.info("Email sending initiated!");
+        HashMap<String, String> response = emailService.sendOtp(email);
+
+        return response;
+    }
+
+    @Transactional
+    private void saveOtpEntry(Email email) {
         VerifyOtp existingEntry = verifyOtpRepo.findByEmail(email.getRecipient()).orElse(null);
         
-        VerifyOtp newEntry = new VerifyOtp();
         if(existingEntry == null) {
             log.debug("User doesn't exist");
+            VerifyOtp newEntry = new VerifyOtp();
             newEntry.setEmail(email.getRecipient());
             newEntry.setOtp_createdAt(LocalDateTime.now());
             newEntry.setCreatedAt(LocalDateTime.now());
@@ -103,10 +112,5 @@ public class Otp {
             existingEntry.setOtp_createdAt(LocalDateTime.now());
             verifyOtpRepo.save(existingEntry);
         }
-        
-        log.info("Email sending initiated!");
-        HashMap<String, String> response = emailService.sendOtp(email);
-
-        return response;
     }
 }
